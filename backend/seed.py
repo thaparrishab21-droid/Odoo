@@ -1,6 +1,6 @@
 import sys
 import os
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from werkzeug.security import generate_password_hash
 
 # Ensure backend directory is in path for module imports
@@ -322,14 +322,14 @@ def seed_database():
             csr_activity_id=training.id,
             status="Approved",
             proof_url="http://example.com/training_certificate.pdf",
-            submitted_at=datetime.utcnow() - timedelta(days=5),
-            approved_at=datetime.utcnow() - timedelta(days=4)
+            submitted_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=5),
+            approved_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=4)
         )
         michael_participation = EmployeeParticipation(
             employee_id=michael.id,
             csr_activity_id=clean_up.id,
             status="Registered",
-            submitted_at=datetime.utcnow() - timedelta(days=1)
+            submitted_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=1)
         )
         
         db.session.add_all([jane_participation, michael_participation])
@@ -373,12 +373,12 @@ def seed_database():
         jane_ack = PolicyAcknowledgement(
             employee_id=jane.id,
             policy_id=zero_waste_policy.id,
-            acknowledged_at=datetime.utcnow() - timedelta(days=10)
+            acknowledged_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=10)
         )
         michael_ack = PolicyAcknowledgement(
             employee_id=michael.id,
             policy_id=zero_waste_policy.id,
-            acknowledged_at=datetime.utcnow() - timedelta(days=8)
+            acknowledged_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=8)
         )
         
         db.session.add_all([jane_ack, michael_ack])
@@ -419,7 +419,7 @@ def seed_database():
             status="Resolved",
             severity="Medium",
             due_date=date.today() - timedelta(days=5),
-            resolved_at=datetime.utcnow() - timedelta(days=7),
+            resolved_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=7),
             owner_id=michael.id,
             audit_id=q2_audit.id
         )
@@ -465,7 +465,7 @@ def seed_database():
             description="Congratulations! You unlocked the 'Eco Champion' badge.",
             type="badge",
             read=False,
-            created_at=datetime.utcnow() - timedelta(hours=2),
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=2),
             employee_id=jane.id
         )
         jane_notif2 = Notification(
@@ -473,7 +473,7 @@ def seed_database():
             description="You acknowledged the 'Zero Single-Use Plastics Policy'.",
             type="policy",
             read=True,
-            created_at=datetime.utcnow() - timedelta(days=10),
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=10),
             employee_id=jane.id
         )
         
@@ -484,7 +484,7 @@ def seed_database():
         jane_redemption = RewardRedemption(
             employee_id=jane.id,
             reward_id=tree_reward.id,
-            redeemed_at=datetime.utcnow() - timedelta(days=3),
+            redeemed_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=3),
             points_spent=100,
             status="Fulfilled"
         )

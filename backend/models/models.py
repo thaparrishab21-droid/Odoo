@@ -1,5 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from database import db
+
+def get_utc_now():
+    """Helper function to return timezone-naive UTC datetime, avoiding deprecation warnings."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 
 # Many-to-many relationship helper table for Employee Badges
 employee_badges = db.Table('employee_badges',
@@ -310,7 +315,7 @@ class EmployeeParticipation(BaseModel):
     csr_activity_id = db.Column(db.Integer, db.ForeignKey('csr_activities.id', ondelete='CASCADE'), nullable=False)
     status = db.Column(db.String(30), default='Registered', nullable=False, index=True)
     proof_url = db.Column(db.String(255), nullable=True)
-    submitted_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    submitted_at = db.Column(db.DateTime, default=get_utc_now, nullable=False)
     approved_at = db.Column(db.DateTime, nullable=True)
     
     # Relations
@@ -390,7 +395,7 @@ class PolicyAcknowledgement(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.id', ondelete='CASCADE'), nullable=False)
     policy_id = db.Column(db.Integer, db.ForeignKey('policies.id', ondelete='CASCADE'), nullable=False)
-    acknowledged_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    acknowledged_at = db.Column(db.DateTime, default=get_utc_now, nullable=False)
     
     # Relations
     employee = db.relationship('Employee', back_populates='acknowledgements')
@@ -503,7 +508,7 @@ class Notification(BaseModel):
     description = db.Column(db.Text, nullable=False)
     type = db.Column(db.String(30), nullable=False)
     read = db.Column(db.Boolean, default=False, nullable=False, index=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=get_utc_now, nullable=False, index=True)
     
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.id', ondelete='CASCADE'), nullable=False)
     
@@ -528,7 +533,7 @@ class RewardRedemption(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.id', ondelete='CASCADE'), nullable=False)
     reward_id = db.Column(db.Integer, db.ForeignKey('rewards.id', ondelete='CASCADE'), nullable=False)
-    redeemed_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    redeemed_at = db.Column(db.DateTime, default=get_utc_now, nullable=False)
     points_spent = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(30), default='Pending', nullable=False)
     
