@@ -352,3 +352,27 @@ def get_leaderboard():
     # Query top employees sorted by XP descending
     top_employees = Employee.query.order_by(Employee.xp.desc()).limit(10).all()
     return jsonify([e.to_dict() for e in top_employees]), 200
+
+@social_bp.route('/notifications', methods=['GET'])
+@jwt_required()
+def get_notifications():
+    current_user_email = get_jwt_identity()
+    employee = Employee.query.filter_by(email=current_user_email).first()
+    if not employee:
+        return jsonify({"message": "Employee not found"}), 404
+        
+    notifications = Notification.query.filter_by(employee_id=employee.id).order_by(Notification.created_at.desc()).limit(15).all()
+    return jsonify([n.to_dict() for n in notifications]), 200
+
+@social_bp.route('/notifications/<int:id>/read', methods=['POST'])
+@jwt_required()
+def mark_notification_read(id):
+    current_user_email = get_jwt_identity()
+    employee = Employee.query.filter_by(email=current_user_email).first()
+    if not employee:
+        return jsonify({"message": "Employee not found"}), 404
+        
+    notification = Notification.query.filter_by(id=id, employee_id=employee.id).first_or_404()
+    notification.read = True
+    db.session.commit()
+    return jsonify(notification.to_dict()), 200

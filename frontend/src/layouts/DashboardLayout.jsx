@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import {
   LayoutDashboard,
   Leaf,
@@ -29,6 +30,44 @@ const DashboardLayout = () => {
     localStorage.getItem('theme') === 'dark' ||
     (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
   );
+  const [notifications, setNotifications] = useState([]);
+
+  // Fetch notifications from API
+  const fetchNotifications = async () => {
+    try {
+      const response = await api.get('/notifications');
+      setNotifications(response.data);
+    } catch (error) {
+      console.warn("Error loading notifications:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      await api.post(`/notifications/${id}/read`);
+      fetchNotifications();
+    } catch (error) {
+      console.warn("Mark read error:", error);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      const unread = notifications.filter(n => !n.read);
+      await Promise.all(unread.map(n => api.post(`/notifications/${n.id}/read`)));
+      fetchNotifications();
+    } catch (error) {
+      console.warn("Mark all read error:", error);
+    }
+  };
 
   // Sync theme with body class
   useEffect(() => {
@@ -54,12 +93,6 @@ const DashboardLayout = () => {
     { name: 'Gamification', path: '/gamification', icon: Trophy },
     { name: 'Reports', path: '/reports', icon: FileText },
     { name: 'Settings', path: '/settings', icon: SettingsIcon },
-  ];
-
-  // Mock notifications for UI skeleton
-  const mockNotifications = [
-    { id: 1, title: 'New Badge Unlocked', description: 'You unlocked the "Eco Champion" badge!', type: 'badge', read: false },
-    { id: 2, title: 'Compliance Issue Overdue', description: 'Policy audit review is overdue.', type: 'compliance', read: false },
   ];
 
   return (
@@ -206,9 +239,11 @@ const DashboardLayout = () => {
                 title="Notifications"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-darkbg-900" />
+                {notifications.some(n => !n.read) && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-darkbg-900" />
+                )}
               </button>
-
+              
               {/* Notifications Dropdown Panel */}
               {notificationsOpen && (
                 <>
@@ -216,15 +251,25 @@ const DashboardLayout = () => {
                   <div className="absolute right-0 mt-2 z-20 w-80 bg-white border border-slate-200 dark:bg-darkbg-900 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden py-1">
                     <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
                       <span className="text-xs font-semibold text-slate-800 dark:text-white">Notifications</span>
-                      <button className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline">Mark all read</button>
+                      <button onClick={handleMarkAllRead} className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline">Mark all read</button>
                     </div>
                     <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-60 overflow-y-auto">
-                      {mockNotifications.map((notif) => (
-                        <div key={notif.id} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer">
-                          <span className="block text-xs font-bold text-slate-800 dark:text-slate-100">{notif.title}</span>
-                          <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{notif.description}</span>
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-center text-[10px] text-slate-400 dark:text-slate-500">
+                          Zero notifications logs.
                         </div>
-                      ))}
+                      ) : (
+                        notifications.map((notif) => (
+                          <div 
+                            key={notif.id} 
+                            onClick={() => handleMarkAsRead(notif.id)}
+                            className={`p-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer ${notif.read ? 'opacity-60' : 'bg-emerald-500/5 font-semibold'}`}
+                          >
+                            <span className="block text-xs text-slate-800 dark:text-slate-100">{notif.title}</span>
+                            <span className="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{notif.description}</span>
+                          </div>
+                        ))
+                      )}
                     </div>
                     <div className="p-2 text-center border-t border-slate-100 dark:border-slate-800">
                       <button className="text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-emerald-500" onClick={() => { setNotificationsOpen(false); navigate('/settings'); }}>
