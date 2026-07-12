@@ -26,12 +26,21 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+    @apply bg-slate-300 rounded-full;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400 dark:bg-slate-600;
+    @apply bg-slate-400;
   }
+}
+
+/* Dark mode scrollbars using correct selector syntax */
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-slate-700;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-600;
 }
 
 /* Glassmorphism utility classes */

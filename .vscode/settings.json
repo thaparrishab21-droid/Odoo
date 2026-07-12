@@ -4,5 +4,8 @@
   "python.analysis.extraPaths": [
     "${workspaceFolder}/backend"
   ],
-  "python.analysis.useLibraryCodeForTypes": true
+  "python.analysis.useLibraryCodeForTypes": true,
+  "css.customData": [
+    ".vscode/tailwind-custom-data.json"
+  ]
 }
