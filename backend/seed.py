@@ -197,19 +197,25 @@ def seed_database():
             name="Eco Champion",
             description="Awarded for participating in 3 environmental challenges or events.",
             icon_name="award-green",
-            xp_required=300
+            xp_required=300,
+            unlock_rule="xp >= 300",
+            status="Active"
         )
         carbon_saver = Badge(
             name="Carbon Saver",
             description="Awarded for logging 10 or more low-emissions entries.",
             icon_name="leaf-gold",
-            xp_required=500
+            xp_required=500,
+            unlock_rule="xp >= 500",
+            status="Active"
         )
         policy_guardian = Badge(
             name="Policy Guardian",
             description="Unlock by acknowledging all current company compliance regulations.",
             icon_name="shield-indigo",
-            xp_required=150
+            xp_required=150,
+            unlock_rule="xp >= 150",
+            status="Active"
         )
         
         db.session.add_all([eco_champion, carbon_saver, policy_guardian])
@@ -225,19 +231,25 @@ def seed_database():
             name="Bamboo Travel Mug",
             description="Double-walled vacuum insulated, certified organic bamboo cover.",
             points_cost=200,
-            stock=45
+            stock=45,
+            xp_required=200,
+            status="Active"
         )
         charger_reward = Reward(
             name="Solar Charger Pad",
             description="Heavy duty waterproof folding solar charger with dual USB inputs.",
             points_cost=500,
-            stock=15
+            stock=15,
+            xp_required=500,
+            status="Active"
         )
         tree_reward = Reward(
             name="1 Tree Planted",
             description="A tree will be planted in deforested locations in your name.",
             points_cost=100,
-            stock=999
+            stock=999,
+            xp_required=100,
+            status="Active"
         )
         
         db.session.add_all([travel_mug, charger_reward, tree_reward])
@@ -343,7 +355,10 @@ def seed_database():
             end_date=date.today() + timedelta(days=4),
             status="Active",
             points_reward=200,
-            xp_reward=600
+            xp_reward=600,
+            category_id=environmental_cat.id,
+            difficulty="Medium",
+            evidence_required=True
         )
         commute_challenge = Challenge(
             title="Bike or Carpool Commute",
@@ -352,7 +367,10 @@ def seed_database():
             end_date=date.today() + timedelta(days=30),
             status="Draft",
             points_reward=350,
-            xp_reward=900
+            xp_reward=900,
+            category_id=social_cat.id,
+            difficulty="Hard",
+            evidence_required=True
         )
         
         db.session.add_all([plastics_challenge, commute_challenge])

@@ -65,6 +65,7 @@ const Settings = () => {
     { key: 'policies', label: 'Corporate Policies', searchFields: ['title', 'content'] },
     { key: 'rewards', label: 'Reward Catalog', searchFields: ['name', 'description'] },
     { key: 'badges', label: 'Gamification Badges', searchFields: ['name', 'description'] },
+    { key: 'challenges', label: 'Challenges Arena', searchFields: ['title', 'description'] },
     { key: 'employees', label: 'Employees & Roles', searchFields: ['name', 'email'] }
   ];
 
@@ -436,7 +437,7 @@ const Settings = () => {
               />
               {errorText('name')}
             </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-3 gap-4 mt-4">
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Points cost</label>
                 <input 
@@ -447,6 +448,17 @@ const Settings = () => {
                   onChange={(e) => setFormValues({...formValues, points_cost: parseInt(e.target.value)})}
                 />
                 {errorText('points_cost')}
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">XP Required Cost</label>
+                <input 
+                  type="number" 
+                  required
+                  className={inputClass}
+                  value={formValues.xp_required || ''}
+                  onChange={(e) => setFormValues({...formValues, xp_required: parseInt(e.target.value) || 0})}
+                />
+                {errorText('xp_required')}
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">In Stock</label>
@@ -512,9 +524,126 @@ const Settings = () => {
                 />
                 {errorText('icon_name')}
               </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unlock Rule (e.g. xp &gt;= 300)</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. xp >= 300"
+                  className={inputClass}
+                  value={formValues.unlock_rule || ''}
+                  onChange={(e) => setFormValues({...formValues, unlock_rule: e.target.value})}
+                />
+                {errorText('unlock_rule')}
+              </div>
             </div>
             <div className="mt-4">
               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unlock Details</label>
+              <textarea 
+                className={inputClass}
+                rows={2}
+                value={formValues.description || ''}
+                onChange={(e) => setFormValues({...formValues, description: e.target.value})}
+              />
+            </div>
+          </>
+        );
+
+      case 'challenges':
+        return (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Challenge Title</label>
+                <input 
+                  type="text" 
+                  required
+                  className={inputClass}
+                  value={formValues.title || ''}
+                  onChange={(e) => setFormValues({...formValues, title: e.target.value})}
+                />
+                {errorText('title')}
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
+                <select 
+                  className={inputClass}
+                  value={formValues.category_id || ''}
+                  onChange={(e) => setFormValues({...formValues, category_id: e.target.value ? parseInt(e.target.value) : ''})}
+                >
+                  <option value="">Select Category...</option>
+                  {dropdowns.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                {errorText('category_id')}
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Difficulty</label>
+                <select 
+                  className={inputClass}
+                  value={formValues.difficulty || 'Medium'}
+                  onChange={(e) => setFormValues({...formValues, difficulty: e.target.value})}
+                >
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
+                {errorText('difficulty')}
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">XP Reward</label>
+                <input 
+                  type="number" 
+                  required
+                  className={inputClass}
+                  value={formValues.xp_reward !== undefined ? formValues.xp_reward : (formValues.xp || '')}
+                  onChange={(e) => setFormValues({...formValues, xp_reward: parseInt(e.target.value) || 0, xp: parseInt(e.target.value) || 0})}
+                />
+                {errorText('xp_reward')}
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</label>
+                <select 
+                  className={inputClass}
+                  value={formValues.status || 'Draft'}
+                  onChange={(e) => setFormValues({...formValues, status: e.target.value})}
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Active">Active</option>
+                  <option value="Under Review">Under Review</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Archived">Archived</option>
+                </select>
+                {errorText('status')}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Deadline Date</label>
+                <input 
+                  type="date" 
+                  required
+                  className={inputClass}
+                  value={formValues.deadline || (formValues.end_date || '')}
+                  onChange={(e) => setFormValues({...formValues, deadline: e.target.value, end_date: e.target.value, start_date: formValues.start_date || new Date().toISOString().split('T')[0]})}
+                />
+                {errorText('deadline')}
+              </div>
+              <div className="flex items-center space-x-2 mt-6">
+                <input 
+                  type="checkbox" 
+                  id="evidence_required"
+                  className="rounded text-emerald-500 focus:ring-emerald-500 border-slate-350 dark:border-slate-800 bg-slate-50 dark:bg-darkbg-950 w-4 h-4"
+                  checked={!!formValues.evidence_required}
+                  onChange={(e) => setFormValues({...formValues, evidence_required: e.target.checked})}
+                />
+                <label htmlFor="evidence_required" className="text-xs text-slate-600 dark:text-slate-400 font-semibold select-none cursor-pointer">
+                  Evidence Proof Required
+                </label>
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</label>
               <textarea 
                 className={inputClass}
                 rows={2}
@@ -952,21 +1081,24 @@ const Settings = () => {
                               <span className="text-emerald-500 font-bold">Overall: {item.overall_esg_score}</span>
                             )}
                             {activeEntity === 'rewards' && (
-                              <span className="text-amber-500 font-bold">{item.points_cost} points (Stock: {item.stock})</span>
+                              <span className="text-amber-500 font-bold">{item.points_cost} points / {item.xp_required} XP (Stock: {item.stock})</span>
                             )}
                             {activeEntity === 'badges' && (
-                              <span className="text-indigo-500 font-semibold">{item.xp_required} XP required</span>
+                              <span className="text-indigo-500 font-semibold">{item.xp_required} XP (Rule: {item.unlock_rule})</span>
+                            )}
+                            {activeEntity === 'challenges' && (
+                              <span className="text-emerald-500 font-semibold">{item.xp_reward} XP (Difficulty: {item.difficulty})</span>
                             )}
                             {activeEntity === 'employees' && (
                               <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 font-semibold">
                                 {item.role}
                               </span>
                             )}
-                            {item.description && !['rewards', 'badges', 'departments', 'categories'].includes(activeEntity) && (
+                            {item.description && !['rewards', 'badges', 'departments', 'categories', 'challenges'].includes(activeEntity) && (
                               <span className="text-slate-400 truncate block max-w-xs">{item.description}</span>
                             )}
-                            {item.description && ['rewards', 'badges', 'departments', 'categories'].includes(activeEntity) && (
-                              <span className="text-slate-400 block max-w-xs">{item.description}</span>
+                            {item.description && ['rewards', 'badges', 'departments', 'categories', 'challenges'].includes(activeEntity) && (
+                              <span className="text-slate-405 block max-w-xs">{item.description}</span>
                             )}
                             {item.content && (
                               <span className="text-slate-400 truncate block max-w-xs">{item.content}</span>

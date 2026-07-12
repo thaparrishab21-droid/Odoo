@@ -91,6 +91,7 @@ class Category(BaseModel):
     emission_factors = db.relationship('EmissionFactor', back_populates='category', cascade='all, delete-orphan', passive_deletes=True)
     goals = db.relationship('EnvironmentalGoal', back_populates='category', cascade='all, delete-orphan', passive_deletes=True)
     carbon_transactions = db.relationship('CarbonTransaction', back_populates='category', cascade='all, delete-orphan', passive_deletes=True)
+    challenges = db.relationship('Challenge', back_populates='category', cascade='all, delete-orphan', passive_deletes=True)
 
     def to_dict(self):
         return {
@@ -209,6 +210,8 @@ class Badge(BaseModel):
     description = db.Column(db.String(255), nullable=True)
     icon_name = db.Column(db.String(50), nullable=False)
     xp_required = db.Column(db.Integer, default=0, nullable=False)
+    unlock_rule = db.Column(db.String(255), nullable=True)
+    status = db.Column(db.String(30), default='Active', nullable=False)
     
     # Relations
     employees = db.relationship('Employee', secondary=employee_badges, back_populates='badges')
@@ -219,7 +222,9 @@ class Badge(BaseModel):
             "name": self.name,
             "description": self.description,
             "icon_name": self.icon_name,
-            "xp_required": self.xp_required
+            "xp_required": self.xp_required,
+            "unlock_rule": self.unlock_rule,
+            "status": self.status
         }
 
 
@@ -231,6 +236,8 @@ class Reward(BaseModel):
     description = db.Column(db.Text, nullable=True)
     points_cost = db.Column(db.Integer, nullable=False)
     stock = db.Column(db.Integer, default=100, nullable=False)
+    xp_required = db.Column(db.Integer, default=0, nullable=False)
+    status = db.Column(db.String(30), default='Active', nullable=False)
     
     # Relations
     redemptions = db.relationship('RewardRedemption', back_populates='reward', cascade='all, delete-orphan', passive_deletes=True)
@@ -241,7 +248,9 @@ class Reward(BaseModel):
             "name": self.name,
             "description": self.description,
             "points_cost": self.points_cost,
-            "stock": self.stock
+            "stock": self.stock,
+            "xp_required": self.xp_required,
+            "status": self.status
         }
 
 
@@ -347,9 +356,13 @@ class Challenge(BaseModel):
     status = db.Column(db.String(30), default='Draft', nullable=False, index=True)
     points_reward = db.Column(db.Integer, default=0, nullable=False)
     xp_reward = db.Column(db.Integer, default=0, nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id', ondelete='SET NULL'), nullable=True)
+    difficulty = db.Column(db.String(20), default='Medium', nullable=False)
+    evidence_required = db.Column(db.Boolean, default=False, nullable=False)
     
     # Relations
     participations = db.relationship('ChallengeParticipation', back_populates='challenge', cascade='all, delete-orphan', passive_deletes=True)
+    category = db.relationship('Category', back_populates='challenges')
 
     def to_dict(self):
         return {
@@ -358,9 +371,15 @@ class Challenge(BaseModel):
             "description": self.description,
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "end_date": self.end_date.isoformat() if self.end_date else None,
+            "deadline": self.end_date.isoformat() if self.end_date else None,
             "status": self.status,
             "points_reward": self.points_reward,
-            "xp_reward": self.xp_reward
+            "xp_reward": self.xp_reward,
+            "xp": self.xp_reward,
+            "category_id": self.category_id,
+            "category_name": self.category.name if self.category else None,
+            "difficulty": self.difficulty,
+            "evidence_required": self.evidence_required
         }
 
 
@@ -372,6 +391,11 @@ class ChallengeParticipation(BaseModel):
     challenge_id = db.Column(db.Integer, db.ForeignKey('challenges.id', ondelete='CASCADE'), nullable=False)
     progress = db.Column(db.Float, default=0.0, nullable=False)
     status = db.Column(db.String(30), default='Joined', nullable=False, index=True)
+    proof = db.Column(db.String(255), nullable=True)
+    approval = db.Column(db.String(30), default='Pending', nullable=False)
+    xp_awarded = db.Column(db.Integer, default=0, nullable=False)
+    completion = db.Column(db.Boolean, default=False, nullable=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
     
     # Relations
     employee = db.relationship('Employee', back_populates='challenge_participations')
@@ -385,7 +409,12 @@ class ChallengeParticipation(BaseModel):
             "challenge_id": self.challenge_id,
             "challenge_title": self.challenge.title if self.challenge else None,
             "progress": self.progress,
-            "status": self.status
+            "status": self.status,
+            "proof": self.proof,
+            "approval": self.approval,
+            "xp_awarded": self.xp_awarded,
+            "completion": self.completion,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None
         }
 
 
@@ -536,6 +565,7 @@ class RewardRedemption(BaseModel):
     redeemed_at = db.Column(db.DateTime, default=get_utc_now, nullable=False)
     points_spent = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(30), default='Pending', nullable=False)
+    voucher_code = db.Column(db.String(50), nullable=True)
     
     # Relations
     employee = db.relationship('Employee', back_populates='redemptions')
@@ -550,5 +580,6 @@ class RewardRedemption(BaseModel):
             "reward_name": self.reward.name if self.reward else None,
             "redeemed_at": self.redeemed_at.isoformat() if self.redeemed_at else None,
             "points_spent": self.points_spent,
-            "status": self.status
+            "status": self.status,
+            "voucher_code": self.voucher_code
         }
