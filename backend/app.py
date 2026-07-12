@@ -6,6 +6,7 @@ from flask_jwt_extended import JWTManager
 from config import Config
 from database import db
 from routes.auth import auth_bp
+from routes.master_data import master_bp
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -19,6 +20,7 @@ def create_app(config_class=Config):
 
     # Register Blueprints
     app.register_blueprint(auth_bp)
+    app.register_blueprint(master_bp)
 
     # Global Health Check Route
     @app.route('/api/health', methods=['GET'])
