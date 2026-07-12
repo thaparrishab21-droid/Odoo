@@ -28,7 +28,12 @@ from models import (
     ComplianceIssue,
     DepartmentScore,
     Notification,
-    RewardRedemption
+    RewardRedemption,
+    PersonalCarbonCalculation,
+    GreenIdea,
+    IdeaVote,
+    IdeaComment,
+    SystemSetting
 )
 
 def seed_database():
@@ -64,7 +69,11 @@ def seed_database():
             role="Admin",
             points=100,
             xp=500,
-            department_id=sustainability.id
+            department_id=sustainability.id,
+            gender="Female",
+            age=34,
+            employment_type="Full-time",
+            joining_date=date(2023, 5, 12)
         )
         
         jane = Employee(
@@ -74,7 +83,11 @@ def seed_database():
             role="Employee",
             points=450,
             xp=2450,
-            department_id=engineering.id
+            department_id=engineering.id,
+            gender="Female",
+            age=28,
+            employment_type="Full-time",
+            joining_date=date(2024, 2, 1)
         )
         
         auditor = Employee(
@@ -84,7 +97,11 @@ def seed_database():
             role="Admin",
             points=50,
             xp=300,
-            department_id=operations.id
+            department_id=operations.id,
+            gender="Male",
+            age=45,
+            employment_type="Full-time",
+            joining_date=date(2023, 11, 15)
         )
         
         michael = Employee(
@@ -94,10 +111,85 @@ def seed_database():
             role="Employee",
             points=120,
             xp=800,
-            department_id=sales.id
+            department_id=sales.id,
+            gender="Male",
+            age=31,
+            employment_type="Full-time",
+            joining_date=date(2024, 6, 20)
         )
         
-        db.session.add_all([admin, jane, auditor, michael])
+        # Additional diverse employees for realistic charts
+        emp1 = Employee(
+            name="Alex Rivera",
+            email="alex@ecosphere.com",
+            password_hash=hashed_pwd_emp,
+            role="Employee",
+            points=80,
+            xp=400,
+            department_id=engineering.id,
+            gender="Other",
+            age=24,
+            employment_type="Contract",
+            joining_date=date(2024, 9, 10)
+        )
+        
+        emp2 = Employee(
+            name="Sarah Connor",
+            email="sarah@ecosphere.com",
+            password_hash=hashed_pwd_emp,
+            role="Employee",
+            points=150,
+            xp=900,
+            department_id=sustainability.id,
+            gender="Female",
+            age=39,
+            employment_type="Full-time",
+            joining_date=date(2023, 8, 5)
+        )
+        
+        emp3 = Employee(
+            name="David Kim",
+            email="david@ecosphere.com",
+            password_hash=hashed_pwd_emp,
+            role="Employee",
+            points=95,
+            xp=550,
+            department_id=operations.id,
+            gender="Male",
+            age=52,
+            employment_type="Full-time",
+            joining_date=date(2023, 1, 10)
+        )
+        
+        emp4 = Employee(
+            name="Anya Petrov",
+            email="anya@ecosphere.com",
+            password_hash=hashed_pwd_emp,
+            role="Employee",
+            points=60,
+            xp=300,
+            department_id=sales.id,
+            gender="Female",
+            age=23,
+            employment_type="Intern",
+            joining_date=date(2025, 1, 15)
+        )
+        
+        emp5 = Employee(
+            name="Robin Carter",
+            email="robin@ecosphere.com",
+            password_hash=hashed_pwd_emp,
+            role="Employee",
+            points=110,
+            xp=750,
+            department_id=engineering.id,
+            gender="Other",
+            age=29,
+            employment_type="Part-time",
+            joining_date=date(2024, 11, 1)
+        )
+        
+        db.session.add_all([admin, jane, auditor, michael, emp1, emp2, emp3, emp4, emp5])
         db.session.flush()
         
         # 3. ESG Categories
@@ -508,6 +600,125 @@ def seed_database():
         )
         
         db.session.add_all([jane_redemption])
+        db.session.flush()
+
+        # 21. Personal Carbon Calculations (Historical data)
+        print("Seeding Carbon Calculations...")
+        calc1 = PersonalCarbonCalculation(
+            employee_id=jane.id,
+            commute_distance=15.5,
+            vehicle_type="Petrol Car",
+            electricity_usage=120.0,
+            flight_hours=2.0,
+            fuel_consumption=10.0,
+            food_preference="Balanced",
+            working_days=20,
+            transportation_co2=15.5 * 20 * 2 * 0.17 + 10.0 * 2.5, # 130.7
+            electricity_co2=120.0 * 0.385, # 46.2
+            food_co2=135.0,
+            flight_co2=2.0 * 150.0, # 300.0
+            total_co2=130.7 + 46.2 + 135.0 + 300.0, # 611.9
+            ai_suggestions="Consider carpooling and transitioning to electric energy sources.",
+            month="2026-05",
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=60)
+        )
+        calc2 = PersonalCarbonCalculation(
+            employee_id=jane.id,
+            commute_distance=15.5,
+            vehicle_type="Petrol Car",
+            electricity_usage=110.0,
+            flight_hours=0.0,
+            fuel_consumption=8.0,
+            food_preference="Vegetarian",
+            working_days=22,
+            transportation_co2=15.5 * 22 * 2 * 0.17 + 8.0 * 2.5, # 135.94
+            electricity_co2=110.0 * 0.385, # 42.35
+            food_co2=75.0,
+            flight_co2=0.0,
+            total_co2=135.94 + 42.35 + 75.0, # 253.29
+            ai_suggestions="Great progress! Reducing diet impact and removing air travel lowered your total footprint.",
+            month="2026-06",
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=30)
+        )
+        db.session.add_all([calc1, calc2])
+        db.session.flush()
+
+        # 22. Green Ideas Portal Seeding
+        print("Seeding Green Ideas...")
+        idea1 = GreenIdea(
+            title="Install Rooftop Solar Panels",
+            description="Our engineering building has an empty roof. Installing a 20kW grid-tied solar array could cover 40% of our daily power drawer.",
+            category="Environmental",
+            department="Engineering",
+            votes_count=2,
+            status="Approved",
+            employee_id=jane.id,
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=15)
+        )
+        idea2 = GreenIdea(
+            title="Introduce EV Shuttle for Transit",
+            description="We should run a shared electric shuttle from the main train terminal to the office campus twice every morning.",
+            category="Environmental",
+            department="Operations",
+            votes_count=1,
+            status="Under Review",
+            employee_id=michael.id,
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=10)
+        )
+        idea3 = GreenIdea(
+            title="Fair Sourcing supplier guidelines audit",
+            description="Admin teams should conduct bi-annual audits of suppliers to verify their compliance with green policies.",
+            category="Governance",
+            department="Sustainability",
+            votes_count=1,
+            status="Implemented",
+            employee_id=admin.id,
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=25)
+        )
+        db.session.add_all([idea1, idea2, idea3])
+        db.session.flush()
+
+        # 23. Idea Votes Seeding
+        vote1 = IdeaVote(idea_id=idea1.id, employee_id=michael.id)
+        vote2 = IdeaVote(idea_id=idea1.id, employee_id=admin.id)
+        vote3 = IdeaVote(idea_id=idea2.id, employee_id=jane.id)
+        vote4 = IdeaVote(idea_id=idea3.id, employee_id=jane.id)
+        db.session.add_all([vote1, vote2, vote3, vote4])
+        db.session.flush()
+
+        # 24. Idea Comments Seeding
+        comment1 = IdeaComment(
+            idea_id=idea1.id,
+            employee_id=michael.id,
+            content="This is a great idea. We could ask for local government solar installation subsidies.",
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=14)
+        )
+        comment2 = IdeaComment(
+            idea_id=idea1.id,
+            employee_id=admin.id,
+            content="Approved. Sustainability board will review budget plans next Monday.",
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=12)
+        )
+        db.session.add_all([comment1, comment2])
+        db.session.flush()
+        
+        # Seed default ESG weights
+        print("Seeding ESG weights settings...")
+        settings = SystemSetting(
+            environmental_weight=40,
+            social_weight=30,
+            governance_weight=30,
+            evidence_required=True,
+            auto_carbon=True,
+            auto_badge=True
+        )
+        db.session.add(settings)
+        db.session.flush()
+        
+        # Calculate dynamic scores for seed initial states
+        print("Recalculating initial department ESG scores...")
+        from routes.premium import recalculate_session_scores
+        recalculate_session_scores(db.session)
         
         print("Committing changes...")
         db.session.commit()

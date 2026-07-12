@@ -11,6 +11,7 @@ from routes.environmental import environmental_bp
 from routes.social_gamification import social_bp
 from routes.governance import gov_bp
 from routes.reports import reports_bp
+from routes.premium import premium_bp
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -29,6 +30,7 @@ def create_app(config_class=Config):
     app.register_blueprint(social_bp)
     app.register_blueprint(gov_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(premium_bp)
 
     # Global Health Check Route
     @app.route('/api/health', methods=['GET'])
@@ -81,5 +83,6 @@ def create_app(config_class=Config):
 
 if __name__ == '__main__':
     app = create_app()
-    # Run server on port 5000 in development mode
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Run server on custom port or default 5000 in development mode
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)

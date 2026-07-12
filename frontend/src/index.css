@@ -38,3 +38,77 @@
 .glass-card {
   @apply bg-white/70 dark:bg-darkbg-900/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 shadow-sm;
 }
+
+/* Premium Keyframe Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 16px 6px rgba(16, 185, 129, 0.2);
+  }
+}
+
+@keyframes spinOnce {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+/* Animation utilities */
+.animate-fade-in-up {
+  animation: fadeInUp 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 200ms ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+.animate-spin-once {
+  animation: spinOnce 200ms ease-out forwards;
+}
+
+/* Custom premium hover and border effects */
+.premium-gradient-border {
+  position: relative;
+}
+.premium-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(to right, #10b981, #3b82f6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+

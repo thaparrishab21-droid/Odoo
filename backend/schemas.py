@@ -66,6 +66,10 @@ class EmployeeSchema(Schema):
     points = fields.Int(load_default=0)
     xp = fields.Int(load_default=0)
     department_id = fields.Int(allow_none=True)
+    gender = fields.Str(allow_none=True, validate=validate.OneOf(['Male', 'Female', 'Other']))
+    age = fields.Int(allow_none=True, validate=validate.Range(min=18, max=100))
+    employment_type = fields.Str(allow_none=True, validate=validate.OneOf(['Full-time', 'Part-time', 'Contract', 'Intern']))
+    joining_date = fields.Date(allow_none=True)
 
 
 class CarbonTransactionSchema(Schema):
@@ -101,5 +105,35 @@ class ChallengeParticipationSchema(Schema):
     approval = fields.Str(load_default='Pending', validate=validate.OneOf(['Pending', 'Approved', 'Rejected']))
     xp_awarded = fields.Int(load_default=0)
     completion = fields.Bool(load_default=False)
+
+
+class PersonalCarbonCalculationSchema(Schema):
+    commute_distance = fields.Float(required=True, validate=validate.Range(min=0.0))
+    vehicle_type = fields.Str(required=True, validate=[validate.Length(min=1, max=50), validate_non_empty])
+    electricity_usage = fields.Float(required=True, validate=validate.Range(min=0.0))
+    flight_hours = fields.Float(required=True, validate=validate.Range(min=0.0))
+    fuel_consumption = fields.Float(required=True, validate=validate.Range(min=0.0))
+    food_preference = fields.Str(required=True, validate=[validate.Length(min=1, max=50), validate_non_empty])
+    working_days = fields.Int(required=True, validate=validate.Range(min=1, max=31))
+
+
+class GreenIdeaSchema(Schema):
+    title = fields.Str(required=True, validate=[validate.Length(min=1, max=150), validate_non_empty])
+    description = fields.Str(required=True, validate=[validate.Length(min=5), validate_non_empty])
+    category = fields.Str(required=True, validate=[validate.Length(min=1, max=50), validate_non_empty])
+    department = fields.Str(required=True, validate=[validate.Length(min=1, max=100), validate_non_empty])
+
+
+class IdeaCommentSchema(Schema):
+    content = fields.Str(required=True, validate=[validate.Length(min=1), validate_non_empty])
+
+
+class SystemSettingSchema(Schema):
+    environmental_weight = fields.Int(required=True, validate=validate.Range(min=0, max=100))
+    social_weight = fields.Int(required=True, validate=validate.Range(min=0, max=100))
+    governance_weight = fields.Int(required=True, validate=validate.Range(min=0, max=100))
+    evidence_required = fields.Bool(load_default=True)
+    auto_carbon = fields.Bool(load_default=True)
+    auto_badge = fields.Bool(load_default=True)
 
 

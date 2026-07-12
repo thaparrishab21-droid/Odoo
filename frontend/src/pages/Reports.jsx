@@ -12,7 +12,11 @@ import {
   Building2,
   CheckCircle,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Brain,
+  Printer,
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 
 const Reports = () => {
@@ -21,6 +25,128 @@ const Reports = () => {
   const [summaryData, setSummaryData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [downloadLoading, setDownloadLoading] = useState(null);
+
+  // AI Executive Report states
+  const [aiReport, setAiReport] = useState(null);
+  const [aiReportLoading, setAiReportLoading] = useState(false);
+  const [aiReportError, setAiReportError] = useState('');
+
+  const handleGenerateAIReport = async () => {
+    setAiReportLoading(true);
+    setAiReportError('');
+    setAiReport(null);
+    try {
+      const res = await api.get('/reports/ai-executive-report', {
+        params: { department_id: selectedDeptId || undefined }
+      });
+      setAiReport(res.data.report);
+    } catch (e) {
+      console.error("AI Report generation error:", e);
+      setAiReportError('Failed to generate AI executive report. Please check API key setup.');
+    } finally {
+      setAiReportLoading(false);
+    }
+  };
+
+  const handlePrintReport = () => {
+    const printStyle = document.createElement('style');
+    printStyle.innerHTML = `
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #printable-report-area, #printable-report-area * {
+          visibility: visible;
+        }
+        #printable-report-area {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          background: white !important;
+          color: black !important;
+          padding: 20px;
+        }
+      }
+    `;
+    document.head.appendChild(printStyle);
+    window.print();
+    document.head.removeChild(printStyle);
+  };
+
+  const renderReportMarkdown = (text) => {
+    if (!text) return null;
+    const lines = text.split('\n');
+    return lines.map((line, idx) => {
+      if (line.startsWith('# ')) {
+        return (
+          <h1 key={idx} className="text-xl font-extrabold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3 mb-6 flex items-center">
+            <Sparkles className="w-5 h-5 text-emerald-500 mr-2 shrink-0" />
+            {line.replace('# ', '')}
+          </h1>
+        );
+      }
+      if (line.startsWith('## ')) {
+        return (
+          <h2 key={idx} className="text-xs font-bold text-slate-850 dark:text-slate-100 uppercase tracking-wider mt-6 mb-3 flex items-center">
+            <ChevronRight className="w-4 h-4 text-emerald-500 mr-1.5 shrink-0" />
+            {line.replace('## ', '')}
+          </h2>
+        );
+      }
+      
+      const boldRegex = /\*\*(.*?)\*\*/g;
+      const parts = [];
+      let lastIndex = 0;
+      let match;
+      while ((match = boldRegex.exec(line)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(line.substring(lastIndex, match.index));
+        }
+        parts.push(<strong key={match.index} className="font-extrabold text-slate-950 dark:text-white">{match[1]}</strong>);
+        lastIndex = boldRegex.lastIndex;
+      }
+      if (lastIndex < line.length) {
+        parts.push(line.substring(lastIndex));
+      }
+      
+      const renderedLine = parts.length > 0 ? parts : line;
+
+      if (line.trim().startsWith('- ')) {
+        const bulletContent = line.trim().substring(2);
+        let bulletParts = [];
+        let bLastIndex = 0;
+        let bMatch;
+        while ((bMatch = boldRegex.exec(bulletContent)) !== null) {
+          if (bMatch.index > bLastIndex) {
+            bulletParts.push(bulletContent.substring(bLastIndex, bMatch.index));
+          }
+          bulletParts.push(<strong key={bMatch.index} className="font-extrabold text-slate-950 dark:text-white">{bMatch[1]}</strong>);
+          bLastIndex = boldRegex.lastIndex;
+        }
+        if (bLastIndex < bulletContent.length) {
+          bulletParts.push(bulletContent.substring(bLastIndex));
+        }
+        const finalBullet = bulletParts.length > 0 ? bulletParts : bulletContent;
+
+        return (
+          <li key={idx} className="list-disc list-inside text-xs ml-3 py-1 text-slate-650 dark:text-slate-350 leading-relaxed">
+            {finalBullet}
+          </li>
+        );
+      }
+
+      if (line.trim() === '') {
+        return <div key={idx} className="h-2" />;
+      }
+
+      return (
+        <p key={idx} className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed mb-2">
+          {renderedLine}
+        </p>
+      );
+    });
+  };
 
   // Fetch departments list
   useEffect(() => {
@@ -315,6 +441,63 @@ const Reports = () => {
             </div>
           </div>
 
+          {/* AI Executive Report Generator */}
+          <div className="bg-white dark:bg-darkbg-900 premium-gradient-border rounded-2xl p-6 shadow-xl space-y-4 animate-fade-in-up">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-3 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">AI Executive Report Generator</h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">Generate a complete ESG narrative report compiled by AI models using live data.</p>
+              </div>
+              <button
+                onClick={handleGenerateAIReport}
+                disabled={aiReportLoading}
+                className="py-1.5 px-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold text-xs rounded-xl shadow-md transition-all flex items-center disabled:opacity-50"
+              >
+                {aiReportLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                    <span>Compiling Report...</span>
+                  </>
+                ) : (
+                  <>
+                    <Brain className="w-3.5 h-3.5 mr-1.5" />
+                    <span>Generate AI Report</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {aiReportError && (
+              <div className="p-3.5 bg-rose-50 border border-rose-100 rounded-xl flex items-start space-x-2 dark:bg-rose-950/20 dark:border-rose-900/30">
+                <AlertTriangle className="w-4 h-4 text-rose-500 mt-0.5 shrink-0" />
+                <span className="text-[10px] text-rose-600 dark:text-rose-400 font-medium">{aiReportError}</span>
+              </div>
+            )}
+
+            {aiReport && (
+              <div className="space-y-4 animate-fade-in">
+                <div className="flex justify-end pt-1">
+                  <button
+                    onClick={handlePrintReport}
+                    className="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-lg flex items-center transition-all"
+                  >
+                    <Printer className="w-3.5 h-3.5 mr-1.5" />
+                    Print / Export PDF
+                  </button>
+                </div>
+                
+                {/* Printable container area */}
+                <div 
+                  id="printable-report-area" 
+                  className="p-6 rounded-xl bg-slate-50/50 dark:bg-darkbg-950/10 border border-slate-100 dark:border-slate-850 text-slate-800 dark:text-slate-100"
+                >
+                  <div className="space-y-4">
+                    {renderReportMarkdown(aiReport)}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -32,6 +32,28 @@ const Settings = () => {
   const [weightsError, setWeightsError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Load settings weights from database
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await api.get('/settings');
+        setWeights({
+          environmental: res.data.environmental_weight,
+          social: res.data.social_weight,
+          governance: res.data.governance_weight
+        });
+        setToggles({
+          evidenceRequired: res.data.evidence_required,
+          autoCarbon: res.data.auto_carbon,
+          autoBadge: res.data.auto_badge
+        });
+      } catch (err) {
+        console.error("Error fetching system settings:", err);
+      }
+    };
+    loadSettings();
+  }, []);
+
   // Active Main Tab: 'profile' | 'weights' | 'master_data'
   const [activeMainTab, setActiveMainTab] = useState('weights');
   
@@ -128,8 +150,8 @@ const Settings = () => {
     setSelectedItem(null);
   };
 
-  // Validates weights configuration
-  const handleSaveWeights = (e) => {
+  // Validates weights configuration and saves to backend
+  const handleSaveWeights = async (e) => {
     e.preventDefault();
     setWeightsError('');
     setSaveSuccess(false);
@@ -140,8 +162,21 @@ const Settings = () => {
       return;
     }
 
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    try {
+      await api.put('/settings', {
+        environmental_weight: Number(weights.environmental),
+        social_weight: Number(weights.social),
+        governance_weight: Number(weights.governance),
+        evidence_required: toggles.evidenceRequired,
+        auto_carbon: toggles.autoCarbon,
+        auto_badge: toggles.autoBadge
+      });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      console.error("Error saving weights settings:", err);
+      setWeightsError(err.response?.data?.message || "Failed to save settings weights configuration.");
+    }
   };
 
   // Renders dynamic form fields based on the selected master data entity

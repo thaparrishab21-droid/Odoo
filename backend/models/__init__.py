@@ -18,5 +18,10 @@ from .models import (
     ComplianceIssue,
     DepartmentScore,
     Notification,
-    RewardRedemption
+    RewardRedemption,
+    PersonalCarbonCalculation,
+    GreenIdea,
+    IdeaVote,
+    IdeaComment,
+    SystemSetting
 )

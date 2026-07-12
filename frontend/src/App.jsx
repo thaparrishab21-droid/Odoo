@@ -12,6 +12,11 @@ import Gamification from './pages/Gamification';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
+import CarbonCalculator from './pages/CarbonCalculator';
+import Predictions from './pages/Predictions';
+import GreenIdeas from './pages/GreenIdeas';
+import DiversityDashboard from './pages/DiversityDashboard';
+import DepartmentScores from './pages/DepartmentScores';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -39,6 +44,11 @@ function App() {
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="carbon-calculator" element={<CarbonCalculator />} />
+            <Route path="predictions" element={<Predictions />} />
+            <Route path="ideas" element={<GreenIdeas />} />
+            <Route path="diversity" element={<DiversityDashboard />} />
+            <Route path="department-scores" element={<DepartmentScores />} />
             
             {/* Fallback route within Dashboard layout */}
             <Route path="*" element={<NotFound />} />

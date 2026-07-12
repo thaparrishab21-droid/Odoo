@@ -54,6 +54,12 @@ class Employee(BaseModel):
     
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='SET NULL'), nullable=True)
     
+    # Diversity columns
+    gender = db.Column(db.String(20), nullable=True)
+    age = db.Column(db.Integer, nullable=True)
+    employment_type = db.Column(db.String(30), nullable=True)
+    joining_date = db.Column(db.Date, nullable=True)
+    
     # Relationships
     department = db.relationship('Department', back_populates='employees')
     badges = db.relationship('Badge', secondary=employee_badges, back_populates='employees')
@@ -76,7 +82,11 @@ class Employee(BaseModel):
             "points": self.points,
             "xp": self.xp,
             "department_id": self.department_id,
-            "department_name": self.department.name if self.department else None
+            "department_name": self.department.name if self.department else None,
+            "gender": self.gender,
+            "age": self.age,
+            "employment_type": self.employment_type,
+            "joining_date": self.joining_date.isoformat() if self.joining_date else None
         }
 
 
@@ -511,7 +521,9 @@ class DepartmentScore(BaseModel):
     social_score = db.Column(db.Float, default=0.0, nullable=False)
     governance_score = db.Column(db.Float, default=0.0, nullable=False)
     overall_score = db.Column(db.Float, default=0.0, nullable=False)
+    total_score = db.Column(db.Float, default=0.0, nullable=False)
     month = db.Column(db.String(7), nullable=False, index=True)
+    last_updated = db.Column(db.DateTime, default=get_utc_now, nullable=False)
     
     # Relations
     department = db.relationship('Department', back_populates='scores')
@@ -525,7 +537,9 @@ class DepartmentScore(BaseModel):
             "social_score": self.social_score,
             "governance_score": self.governance_score,
             "overall_score": self.overall_score,
-            "month": self.month
+            "total_score": self.total_score,
+            "month": self.month,
+            "last_updated": self.last_updated.isoformat() if self.last_updated else None
         }
 
 
@@ -582,4 +596,150 @@ class RewardRedemption(BaseModel):
             "points_spent": self.points_spent,
             "status": self.status,
             "voucher_code": self.voucher_code
+        }
+
+
+class PersonalCarbonCalculation(BaseModel):
+    __tablename__ = 'personal_carbon_calculations'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id', ondelete='CASCADE'), nullable=False)
+    
+    # Inputs
+    commute_distance = db.Column(db.Float, nullable=False)
+    vehicle_type = db.Column(db.String(50), nullable=False)
+    electricity_usage = db.Column(db.Float, nullable=False)
+    flight_hours = db.Column(db.Float, nullable=False)
+    fuel_consumption = db.Column(db.Float, nullable=False)
+    food_preference = db.Column(db.String(50), nullable=False)
+    working_days = db.Column(db.Integer, nullable=False)
+    
+    # Calculated values
+    transportation_co2 = db.Column(db.Float, nullable=False)
+    electricity_co2 = db.Column(db.Float, nullable=False)
+    food_co2 = db.Column(db.Float, nullable=False)
+    flight_co2 = db.Column(db.Float, nullable=False)
+    total_co2 = db.Column(db.Float, nullable=False)
+    
+    ai_suggestions = db.Column(db.Text, nullable=True)
+    month = db.Column(db.String(7), nullable=False, index=True) # YYYY-MM
+    created_at = db.Column(db.DateTime, default=get_utc_now, nullable=False)
+    
+    # Relation
+    employee = db.relationship('Employee', backref=db.backref('carbon_calculations', cascade='all, delete-orphan', passive_deletes=True))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "employee_id": self.employee_id,
+            "commute_distance": self.commute_distance,
+            "vehicle_type": self.vehicle_type,
+            "electricity_usage": self.electricity_usage,
+            "flight_hours": self.flight_hours,
+            "fuel_consumption": self.fuel_consumption,
+            "food_preference": self.food_preference,
+            "working_days": self.working_days,
+            "transportation_co2": self.transportation_co2,
+            "electricity_co2": self.electricity_co2,
+            "food_co2": self.food_co2,
+            "flight_co2": self.flight_co2,
+            "total_co2": self.total_co2,
+            "ai_suggestions": self.ai_suggestions,
+            "month": self.month,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class GreenIdea(BaseModel):
+    __tablename__ = 'green_ideas'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    department = db.Column(db.String(100), nullable=False)
+    votes_count = db.Column(db.Integer, default=0, nullable=False)
+    status = db.Column(db.String(30), default='Submitted', nullable=False, index=True) # Submitted, Under Review, Approved, Rejected, Implemented
+    
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id', ondelete='CASCADE'), nullable=False)
+    created_at = db.Column(db.DateTime, default=get_utc_now, nullable=False)
+    
+    # Relations
+    employee = db.relationship('Employee', backref=db.backref('green_ideas', cascade='all, delete-orphan', passive_deletes=True))
+    comments = db.relationship('IdeaComment', back_populates='idea', cascade='all, delete-orphan', passive_deletes=True)
+    votes = db.relationship('IdeaVote', back_populates='idea', cascade='all, delete-orphan', passive_deletes=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "category": self.category,
+            "department": self.department,
+            "votes_count": self.votes_count,
+            "status": self.status,
+            "employee_id": self.employee_id,
+            "employee_name": self.employee.name if self.employee else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class IdeaVote(BaseModel):
+    __tablename__ = 'idea_votes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    idea_id = db.Column(db.Integer, db.ForeignKey('green_ideas.id', ondelete='CASCADE'), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id', ondelete='CASCADE'), nullable=False)
+    
+    __table_args__ = (db.UniqueConstraint('idea_id', 'employee_id', name='_idea_employee_vote_uc'),)
+    
+    # Relations
+    idea = db.relationship('GreenIdea', back_populates='votes')
+    employee = db.relationship('Employee', backref=db.backref('idea_votes', cascade='all, delete-orphan', passive_deletes=True))
+
+
+class IdeaComment(BaseModel):
+    __tablename__ = 'idea_comments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    idea_id = db.Column(db.Integer, db.ForeignKey('green_ideas.id', ondelete='CASCADE'), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id', ondelete='CASCADE'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=get_utc_now, nullable=False)
+    
+    # Relations
+    idea = db.relationship('GreenIdea', back_populates='comments')
+    employee = db.relationship('Employee', backref=db.backref('idea_comments', cascade='all, delete-orphan', passive_deletes=True))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "idea_id": self.idea_id,
+            "employee_id": self.employee_id,
+            "employee_name": self.employee.name if self.employee else None,
+            "content": self.content,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class SystemSetting(BaseModel):
+    __tablename__ = 'settings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    environmental_weight = db.Column(db.Integer, default=40, nullable=False)
+    social_weight = db.Column(db.Integer, default=30, nullable=False)
+    governance_weight = db.Column(db.Integer, default=30, nullable=False)
+    evidence_required = db.Column(db.Boolean, default=True, nullable=False)
+    auto_carbon = db.Column(db.Boolean, default=True, nullable=False)
+    auto_badge = db.Column(db.Boolean, default=True, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "environmental_weight": self.environmental_weight,
+            "social_weight": self.social_weight,
+            "governance_weight": self.governance_weight,
+            "evidence_required": self.evidence_required,
+            "auto_carbon": self.auto_carbon,
+            "auto_badge": self.auto_badge
         }
