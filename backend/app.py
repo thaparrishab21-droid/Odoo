@@ -10,6 +10,7 @@ from routes.master_data import master_bp
 from routes.environmental import environmental_bp
 from routes.social_gamification import social_bp
 from routes.governance import gov_bp
+from routes.reports import reports_bp
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -27,6 +28,7 @@ def create_app(config_class=Config):
     app.register_blueprint(environmental_bp)
     app.register_blueprint(social_bp)
     app.register_blueprint(gov_bp)
+    app.register_blueprint(reports_bp)
 
     # Global Health Check Route
     @app.route('/api/health', methods=['GET'])
