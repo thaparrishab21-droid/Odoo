@@ -1,0 +1,167 @@
+import React from 'react';
+import { useAuth } from '../context/AuthContext';
+import { 
+  TrendingUp, 
+  Leaf, 
+  Users, 
+  ShieldCheck, 
+  Trophy, 
+  Award, 
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
+
+const Dashboard = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+
+  // Mock dashboard card stats
+  const stats = [
+    { title: 'Carbon Footprint', value: '45.2 tCO2e', change: '-12.4% MoM', icon: Leaf, color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30' },
+    { title: 'CSR Participation', value: '84.6%', change: '+5.2% vs Q2', icon: Users, color: 'text-sky-500 bg-sky-50 dark:bg-sky-950/30' },
+    { title: 'Governance Audit Scope', value: '98.2%', change: 'On Track', icon: ShieldCheck, color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30' },
+    { title: 'Total Gamification XP', value: '2,450 XP', change: 'Rank #4', icon: Trophy, color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/30' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      
+      {/* Welcome Banner */}
+      <div className="p-6 rounded-2xl bg-white dark:bg-darkbg-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Welcome back, {user?.name || 'User'}!
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              You are signed in as <span className="font-semibold text-emerald-500">{user?.role}</span> in the <span className="font-semibold">{user?.department}</span> department.
+            </p>
+          </div>
+          <div className="flex items-center space-x-2 text-xs">
+            <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-medium">
+              Last Login: Today
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {stats.map((stat, idx) => {
+          const Icon = stat.icon;
+          return (
+            <div key={idx} className="p-5 rounded-2xl bg-white dark:bg-darkbg-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{stat.title}</span>
+                <span className="block text-xl font-extrabold text-slate-950 dark:text-white mt-1">{stat.value}</span>
+                <span className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center">
+                  <TrendingUp className="w-3.5 h-3.5 mr-1" />
+                  {stat.change}
+                </span>
+              </div>
+              <div className={`p-3.5 rounded-xl ${stat.color}`}>
+                <Icon className="w-6 h-6" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Content Columns split by role view */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Left Column: Analytics Chart Card Placeholder */}
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-darkbg-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Monthly ESG Scoring Performance</h3>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">Aggregated organizational ESG indicators</p>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md">Realtime</span>
+          </div>
+          
+          {/* Chart placeholder box */}
+          <div className="h-64 mt-6 flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-darkbg-950/20 text-slate-400">
+            <TrendingUp className="w-8 h-8 mb-2 text-slate-300 dark:text-slate-700 animate-pulse" />
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">ESG Trend Charts (Recharts)</span>
+            <span className="text-[10px] text-slate-400 mt-0.5">Database seeding and chart components will deploy in Milestone 2.</span>
+          </div>
+        </div>
+
+        {/* Right Column: Actions / Gamification Progress Card */}
+        <div className="p-6 rounded-2xl bg-white dark:bg-darkbg-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                {isAdmin ? 'System Tasks Checklist' : 'Your Challenge Goals'}
+              </h3>
+              <Award className="w-5 h-5 text-amber-500" />
+            </div>
+
+            <div className="mt-4 space-y-3.5">
+              {isAdmin ? (
+                <>
+                  <div className="flex items-start space-x-3 text-xs">
+                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold block">Initialize Backend Schema</span>
+                      <span className="text-[10px] text-slate-500">Seed SQLite tables with enterprise test fixtures.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 text-xs">
+                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold block text-amber-600 dark:text-amber-400">Role Verification Setup</span>
+                      <span className="text-[10px] text-slate-500">Finalize token permission checks inside middleware.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 text-xs">
+                    <div className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-700 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold block text-slate-400">Configure ESG Weights</span>
+                      <span className="text-[10px] text-slate-500">Modify ESG calculations in Settings (40-30-30).</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start space-x-3 text-xs">
+                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold block">Policy Acknowledgement</span>
+                      <span className="text-[10px] text-slate-500">Acknowledge current "Zero Carbon Office Policy".</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 text-xs">
+                    <div className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-700 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold block">Complete ESG CSR activity</span>
+                      <span className="text-[10px] text-slate-500">Join the "Community Solar Cleanup" this Saturday.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 text-xs">
+                    <div className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-700 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold block text-slate-400">Redeem Points</span>
+                      <span className="text-[10px] text-slate-500">Use 500 green points to get Eco mug reward.</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <button className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[11px] font-semibold rounded-xl transition-all">
+              {isAdmin ? 'Manage Platform Systems' : 'Go to Gamification'}
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  );
+};
+
+export default Dashboard;
