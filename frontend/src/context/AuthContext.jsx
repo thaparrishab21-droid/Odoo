@@ -61,6 +61,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await api.get('/auth/me');
+      setUser(response.data.user);
+    } catch (error) {
+      console.warn("Failed to refresh user profile:", error);
+    }
+  };
+
   const isAdmin = () => user?.role === 'Admin';
   const isEmployee = () => user?.role === 'Employee';
 
@@ -70,6 +79,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
+    refreshUser,
     isAdmin,
     isEmployee,
   };
