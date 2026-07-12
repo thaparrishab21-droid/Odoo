@@ -167,3 +167,32 @@ def export_esg_csv():
         mimetype="text/csv",
         headers={"Content-disposition": f"attachment; filename=ecosphere_{report_type}_report.csv"}
     )
+
+@reports_bp.route('/reports/esg-history', methods=['GET'])
+@role_required(['Admin', 'Employee'])
+def get_esg_history():
+    from collections import defaultdict
+    scores = DepartmentScore.query.all()
+    
+    # Group by month
+    monthly_data = defaultdict(list)
+    for s in scores:
+        monthly_data[s.month].append(s)
+        
+    result = []
+    for month in sorted(monthly_data.keys()):
+        month_scores = monthly_data[month]
+        count = len(month_scores)
+        avg_e = sum(s.environmental_score for s in month_scores) / count
+        avg_s = sum(s.social_score for s in month_scores) / count
+        avg_g = sum(s.governance_score for s in month_scores) / count
+        avg_overall = sum(s.overall_score for s in month_scores) / count
+        result.append({
+            "month": month,
+            "environmental": round(avg_e, 1),
+            "social": round(avg_s, 1),
+            "governance": round(avg_g, 1),
+            "overall": round(avg_overall, 1)
+        })
+        
+    return jsonify(result), 200

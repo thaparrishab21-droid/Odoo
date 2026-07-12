@@ -1,5 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
 import { 
   TrendingUp, 
   Leaf, 
@@ -8,19 +20,66 @@ import {
   Trophy, 
   Award, 
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = user?.role === 'Admin';
 
-  // Mock dashboard card stats
+  const [chartData, setChartData] = useState([]);
+  const [summaryData, setSummaryData] = useState(null);
+  const [chartLoading, setChartLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [chartRes, summaryRes] = await Promise.all([
+          api.get('/reports/esg-history'),
+          api.get('/reports/esg-summary')
+        ]);
+        setChartData(chartRes.data);
+        setSummaryData(summaryRes.data);
+      } catch (error) {
+        console.error("Dashboard stats fetching error:", error);
+      } finally {
+        setChartLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const stats = [
-    { title: 'Carbon Footprint', value: '45.2 tCO2e', change: '-12.4% MoM', icon: Leaf, color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30' },
-    { title: 'CSR Participation', value: '84.6%', change: '+5.2% vs Q2', icon: Users, color: 'text-sky-500 bg-sky-50 dark:bg-sky-950/30' },
-    { title: 'Governance Audit Scope', value: '98.2%', change: 'On Track', icon: ShieldCheck, color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30' },
-    { title: 'Total Gamification XP', value: '2,450 XP', change: 'Rank #4', icon: Trophy, color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/30' },
+    { 
+      title: 'Carbon Footprint', 
+      value: summaryData ? `${summaryData.environmental.total_emissions} kg` : '0 kg', 
+      change: 'Calculated Footprint', 
+      icon: Leaf, 
+      color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30' 
+    },
+    { 
+      title: 'CSR Register Count', 
+      value: summaryData ? `${summaryData.social.total_participations} Events` : '0 Events', 
+      change: `${summaryData?.social?.approved_participations || 0} Approved`, 
+      icon: Users, 
+      color: 'text-sky-500 bg-sky-50 dark:bg-sky-950/30' 
+    },
+    { 
+      title: 'Policies Signed', 
+      value: summaryData ? `${summaryData.governance.policy_acknowledgements_count} Signed` : '0 Signed', 
+      change: 'Guideline Compliant', 
+      icon: ShieldCheck, 
+      color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30' 
+    },
+    { 
+      title: 'Your Level XP', 
+      value: user ? `${user.xp} XP` : '0 XP', 
+      change: `Eco Points: ${user?.points || 0}`, 
+      icon: Trophy, 
+      color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/30' 
+    },
   ];
 
   return (
@@ -70,7 +129,7 @@ const Dashboard = () => {
       {/* Content Columns split by role view */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Column: Analytics Chart Card Placeholder */}
+        {/* Left Column: Analytics Chart Card */}
         <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-darkbg-900 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
             <div>
@@ -80,11 +139,45 @@ const Dashboard = () => {
             <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md">Realtime</span>
           </div>
           
-          {/* Chart placeholder box */}
-          <div className="h-64 mt-6 flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-darkbg-950/20 text-slate-400">
-            <TrendingUp className="w-8 h-8 mb-2 text-slate-300 dark:text-slate-700 animate-pulse" />
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">ESG Trend Charts (Recharts)</span>
-            <span className="text-[10px] text-slate-400 mt-0.5">Database seeding and chart components will deploy in Milestone 2.</span>
+          {/* Chart Display Area */}
+          <div className="h-64 mt-6">
+            {chartLoading ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <Loader2 className="w-7 h-7 animate-spin text-emerald-500 mb-2" />
+                <span className="text-xs">Loading analytics graphs...</span>
+              </div>
+            ) : chartData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                No historical department scorecards logged.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorOverall" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorEnv" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-800" />
+                  <XAxis dataKey="month" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={9} domain={[0, 100]} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.98)', border: 'none', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', fontSize: '10px' }}
+                    labelStyle={{ fontWeight: 'bold', color: '#1e293b' }}
+                  />
+                  <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: '9px', paddingTop: '10px' }} />
+                  <Area type="monotone" dataKey="overall" name="Overall Index" stroke="#3b82f6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorOverall)" />
+                  <Area type="monotone" dataKey="environmental" name="Environmental (E)" stroke="#10b981" strokeWidth={1.5} fillOpacity={1} fill="url(#colorEnv)" />
+                  <Area type="monotone" dataKey="social" name="Social (S)" stroke="#06b6d4" strokeWidth={1.5} fillOpacity={0} />
+                  <Area type="monotone" dataKey="governance" name="Governance (G)" stroke="#6366f1" strokeWidth={1.5} fillOpacity={0} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -109,16 +202,16 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="flex items-start space-x-3 text-xs">
-                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-semibold block text-amber-600 dark:text-amber-400">Role Verification Setup</span>
+                      <span className="font-semibold block text-slate-800 dark:text-slate-200">Role Verification Setup</span>
                       <span className="text-[10px] text-slate-500">Finalize token permission checks inside middleware.</span>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3 text-xs">
                     <div className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-700 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-semibold block text-slate-400">Configure ESG Weights</span>
+                      <span className="font-semibold block text-slate-600 dark:text-slate-400 font-bold">Configure ESG Weights</span>
                       <span className="text-[10px] text-slate-500">Modify ESG calculations in Settings (40-30-30).</span>
                     </div>
                   </div>
@@ -152,7 +245,10 @@ const Dashboard = () => {
           </div>
 
           <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <button className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[11px] font-semibold rounded-xl transition-all">
+            <button 
+              onClick={() => navigate(isAdmin ? '/settings' : '/gamification')}
+              className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[11px] font-semibold rounded-xl transition-all text-slate-900 dark:text-white"
+            >
               {isAdmin ? 'Manage Platform Systems' : 'Go to Gamification'}
             </button>
           </div>
