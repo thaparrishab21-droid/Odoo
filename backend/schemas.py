@@ -62,3 +62,13 @@ class EmployeeSchema(Schema):
     points = fields.Int(load_default=0)
     xp = fields.Int(load_default=0)
     department_id = fields.Int(allow_none=True)
+
+
+class CarbonTransactionSchema(Schema):
+    activity_name = fields.Str(required=True, validate=[validate.Length(min=1, max=150), validate_non_empty])
+    quantity = fields.Float(required=True, validate=validate.Range(min=0.0001, error="Quantity must be greater than zero."))
+    date = fields.Date(required=True)
+    department_id = fields.Int(required=True)
+    category_id = fields.Int(required=True)
+    emission_factor_id = fields.Int(required=True)
+
