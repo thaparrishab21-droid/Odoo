@@ -203,7 +203,7 @@ Google Gemini API · Scikit-Learn
 
 ## Contributors
 
-Rishab Thapar
-Brinda Nanda
-Sagar Singh Solanki
-Vanshika
+1. Rishab Thapar
+2. Brinda Nanda
+3. Sagar Singh Solanki
+4. Vanshika
